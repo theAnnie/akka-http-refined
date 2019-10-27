@@ -3,11 +3,14 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import spray.json.JsValue
 
+import scala.concurrent.Future
 import scala.io.StdIn
 
-object Server extends App with Directives {
+object Server extends App with Directives with StaticValues {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
@@ -16,9 +19,24 @@ object Server extends App with Directives {
   private val port = 8080
 
   val requestHandler: HttpRequest => HttpResponse = {
-    case HttpRequest(POST,Uri.Path(_),_,_@entity,_) =>
-      print(entity)
-      HttpResponse(200, entity = "Gitara siema")
+    case HttpRequest(POST, Uri.Path(_), _@headers, _@entity, _) =>
+
+      val x: Future[JsValue] = Unmarshal(entity).to[JsValue]
+      //x.map(y => println(y.asJsObject.getFields("name")))
+      //x.map(y => println(y.asJsObject.fields.get("kind")))
+
+
+      //      val xx = x.map { y => y.asJsObject
+      //        .fields
+      //        .get("kind")
+      //
+      //      }
+
+      x.value match {
+        case Some(y) => ResponseHandler.handleResponse(y)
+        case None => errorResponse
+
+      }
 
     case other: HttpRequest =>
       other.discardEntityBytes()
