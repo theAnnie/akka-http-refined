@@ -1,5 +1,6 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives
@@ -19,21 +20,12 @@ object Server extends App with Directives with StaticValues {
   private val port = 8080
 
   val requestHandler: HttpRequest => HttpResponse = {
-    case HttpRequest(POST, Uri.Path(_), _@headers, _@entity, _) =>
+    case HttpRequest(POST, Uri.Path(_), _, _@entity, _) =>
 
       val x: Future[JsValue] = Unmarshal(entity).to[JsValue]
-      //x.map(y => println(y.asJsObject.getFields("name")))
-      //x.map(y => println(y.asJsObject.fields.get("kind")))
-
-
-      //      val xx = x.map { y => y.asJsObject
-      //        .fields
-      //        .get("kind")
-      //
-      //      }
 
       x.value match {
-        case Some(y) => ResponseHandler.handleResponse(y)
+        case Some(y) => ResponseHandler.handle(y)
         case None => errorResponse
 
       }

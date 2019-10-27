@@ -5,7 +5,7 @@ import scala.util.{Failure, Success, Try}
 
 object ResponseHandler extends StaticValues {
 
-  def handleResponse(response: Try[JsValue]): HttpResponse = {
+  def handle(response: Try[JsValue]): HttpResponse = {
 
     response match {
       case Failure(_) => errorResponse
