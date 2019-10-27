@@ -6,12 +6,10 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import spray.json.JsValue
 
-import scala.concurrent.Future
 import scala.io.StdIn
 
-object Server extends App with Directives with StaticValues {
+object Server extends App with Directives with StaticValues with MyJsonProtocol {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
@@ -22,12 +20,11 @@ object Server extends App with Directives with StaticValues {
   val requestHandler: HttpRequest => HttpResponse = {
     case HttpRequest(POST, Uri.Path(_), _, _@entity, _) =>
 
-      val x: Future[JsValue] = Unmarshal(entity).to[JsValue]
+      val futureResponse = Unmarshal(entity).to[Response]
 
-      x.value match {
+      futureResponse.value match {
         case Some(y) => ResponseHandler.handle(y)
         case None => errorResponse
-
       }
 
     case other: HttpRequest =>
